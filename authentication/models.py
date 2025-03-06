@@ -13,7 +13,7 @@ from django.db import models
 
 
 class InterfaceUserManager(BaseUserManager):
-    def create_user(self, email, name, password=None, username=None):
+    def create_user(self, email, name, password=None, username=None, avatar=None):
         if not email:
             raise ValueError("User must have an email address")
         if not name:
@@ -25,7 +25,10 @@ class InterfaceUserManager(BaseUserManager):
             username = self._generate_unique_username(base_username)
 
         user = self.model(
-            email=self.normalize_email(email), name=name, username=username
+            email=self.normalize_email(email),
+            name=name,
+            username=username,
+            avatar=avatar,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -33,8 +36,8 @@ class InterfaceUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_admin(self, email, name, password=None, username=None):
-        user = self.create_user(email, name, password, username)
+    def create_admin(self, email, name, password=None, username=None, avatar=None):
+        user = self.create_user(email, name, password, username, avatar)
         user.groups.add(Group.objects.get(name="Admin"))
         user.save(using=self._db)
         return user
@@ -59,6 +62,7 @@ class InterfaceUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, validators=[EmailValidator()])
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
     name = models.CharField(max_length=125)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     objects = InterfaceUserManager()
 
     USERNAME_FIELD = "email"
